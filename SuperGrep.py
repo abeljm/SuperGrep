@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThread
 from functools import partial
 from interface.main import Ui_MainWindow
 
@@ -27,24 +27,49 @@ class SuperGrep(QMainWindow):
             edit.setText(fileName)
 
     def scan(self):
-        result = list()
-        print("ruta: %s , consulta: %s" % (self.ui.txt_ruta.text(), self.ui.txt_consulta.text()))
-        result = self.search(self.ui.txt_ruta.text(), self.ui.txt_consulta.text())
+        self.searcher = tSearcher(self.ui.txt_ruta.text(), self.ui.txt_consulta.text())
+        self.searcher.updated.connect(self.add_row)
+        self.searcher.start()
 
-        for i in range(len(result)):
-            filename = QStandardItem(result[i][0])
-            filename.setTextAlignment(Qt.AlignCenter)
-            extension = QStandardItem(result[i][1])
-            extension.setTextAlignment(Qt.AlignCenter)
-            path = QStandardItem(result[i][2])
-            path.setTextAlignment(Qt.AlignCenter)
-            pattern = QStandardItem(result[i][3])
-            pattern.setTextAlignment(Qt.AlignCenter)
-            linea_nro = QStandardItem(str(result[i][4]))
-            linea_nro.setTextAlignment(Qt.AlignCenter)
-            self.model.appendRow([filename, extension, path, pattern, linea_nro])
-            self.ui.tableSearch.setModel(self.model)
+    pyqtSlot(list)
+    def add_row(self, result):
+        
+        filename = QStandardItem(result[0])
+        filename.setTextAlignment(Qt.AlignCenter)
+        extension = QStandardItem(result[1])
+        extension.setTextAlignment(Qt.AlignCenter)
+        path = QStandardItem(result[2])
+        path.setTextAlignment(Qt.AlignCenter)
+        pattern = QStandardItem(result[3])
+        pattern.setTextAlignment(Qt.AlignCenter)
+        linea_nro = QStandardItem(str(result[4]))
+        linea_nro.setTextAlignment(Qt.AlignCenter)
+        self.model.appendRow([filename, extension, path, pattern, linea_nro])
+        self.ui.tableSearch.setModel(self.model)        
 
+
+    def tableSearch(self):
+        self.model = QStandardItemModel()
+        self.model.setColumnCount(5)
+        self.model.setRowCount(0)
+        self.model.setHorizontalHeaderLabels(['Nombre Archivo', 'Extension', 'Ruta', 'Palabra', 'Linea #'])
+        self.ui.tableSearch.setModel(self.model)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
+
+
+class tSearcher(QThread):
+    updated = pyqtSignal(list)
+    def __init__(self, directory, pattern, parent=None):
+        super(tSearcher, self).__init__(parent)
+        self.directory = directory
+        self.pattern = pattern
+
+    def run(self):
+        self.search(self.directory, self.pattern)            
 
     def search(self,directory,pattern):
         search = []
@@ -62,25 +87,11 @@ class SuperGrep(QMainWindow):
                                 filename = fn
                                 ext = pathlib.Path(fn).suffix
                                 linea = line.strip().replace(mo.group(),mo.group())
-                                word = mo.group()
-                                search.append([filename, ext, filepath, word, lineno, linea, _pattern ])                                
-        return search   
-        
-
-
-
-    def tableSearch(self):
-        self.model = QStandardItemModel()
-        self.model.setColumnCount(5)
-        self.model.setRowCount(0)
-        self.model.setHorizontalHeaderLabels(['Nombre Archivo', 'Extension', 'Ruta', 'Palabra', 'Linea #'])
-        self.ui.tableSearch.setModel(self.model)
-        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
-        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
-
+                                word = mo.group()                                
+                                #search.append([filename, ext, filepath, word, lineno, linea, _pattern ])
+                                search = [filename, ext, filepath, word, lineno + 1, linea, _pattern ]
+                                self.updated.emit(search)                               
+        return search 
 
 
 if __name__ == '__main__':
