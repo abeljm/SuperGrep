@@ -1,11 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog, QAbstractItemView
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThread
 from functools import partial
 from interface.main import Ui_MainWindow
-
-import time
 
 import re
 import os
@@ -45,7 +43,13 @@ class SuperGrep(QMainWindow):
         linea_nro = QStandardItem(str(result[4]))
         linea_nro.setTextAlignment(Qt.AlignCenter)
         self.model.appendRow([filename, extension, path, pattern, linea_nro])
-        self.ui.tableSearch.setModel(self.model)        
+        self.ui.tableSearch.setModel(self.model)
+        self.ui.tableSearch.setModel(self.model)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self.ui.tableSearch.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)      
 
 
     def tableSearch(self):
@@ -59,6 +63,10 @@ class SuperGrep(QMainWindow):
         self.ui.tableSearch.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.ui.tableSearch.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
         self.ui.tableSearch.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
+        self.ui.tableSearch.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.ui.tableSearch.setDragDropOverwriteMode(False)
+        self.ui.tableSearch.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableSearch.verticalHeader().setVisible(False)
 
 
 class tSearcher(QThread):
