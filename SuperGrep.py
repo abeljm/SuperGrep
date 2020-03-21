@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog, QTableWidgetItem, QAbstractItemView
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from functools import partial
 from interface.main import Ui_MainWindow
 from utils.Searcher import Searcher
@@ -14,6 +14,15 @@ class SuperGrep(QMainWindow):
         self.ui.setupUi(self)
         self.tableSearch()
         self.setWindowIcon(QIcon("resources/lupa.png"))
+        self.ui.btn_rutaExaminar.setIcon(QIcon(QPixmap("resources/carpeta.png")))
+        self.ui.btn_rutaExaminar.setLayoutDirection(Qt.RightToLeft)
+
+        self.ui.btn_excluirExaminar.setIcon(QIcon(QPixmap("resources/carpeta.png")))
+        self.ui.btn_excluirExaminar.setLayoutDirection(Qt.RightToLeft)
+
+        self.ui.btn_buscar.setIcon(QIcon(QPixmap("resources/encontrar.png")))
+        self.ui.btn_buscar.setLayoutDirection(Qt.RightToLeft)
+
         self.ui.btn_rutaExaminar.clicked.connect(partial(self.browse, self.ui.txt_ruta))
         self.ui.btn_excluirExaminar.clicked.connect(partial(self.browse, self.ui.txt_excluirRuta))
         self.ui.btn_buscar.clicked.connect(self.scan)
