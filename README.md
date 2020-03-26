@@ -4,6 +4,6 @@ Herramienta libre para la busqueda recursiva de string en archivos, inspirada en
 ## Tareas Pendientes
 - Poner en negrita en el header de la tabla
 - fijar el tamaño de las celdas de la tabla
-- imprimir en showmessage la informacion que va imprimiendo en la tabla
-- aviso informacion cuando termine la busqueda
+- habilitar opcion pausar y parar busqueda
+- Habilitar opcion excluir archivo y ruta
 

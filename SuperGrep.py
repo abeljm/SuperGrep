@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog, QTableWidgetItem, QAbstractItemView
+from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QFileDialog, QTableWidgetItem, QAbstractItemView, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap
 from functools import partial
@@ -6,6 +6,7 @@ from interface.main import Ui_MainWindow
 from utils.Searcher import Searcher
 import sys
 import html
+from pathlib import Path
 
 class SuperGrep(QMainWindow):
     def __init__(self):
@@ -28,6 +29,8 @@ class SuperGrep(QMainWindow):
         self.ui.btn_buscar.clicked.connect(self.scan)
         self.ui.tableSearch.currentCellChanged.connect(self.dataRow)
         self.result_search = list()
+        self.list_files = list()
+        self.count = 0
 
     def browse(self,edit):
         fileName = QFileDialog.getExistingDirectory(self, 'Select directory')
@@ -36,12 +39,15 @@ class SuperGrep(QMainWindow):
 
     def scan(self):
         ruta = self.ui.txt_ruta.text()
-        self.searcher = Searcher(ruta, self.ui.txt_consulta.text())
+        excluido = list()
+        excluir_ruta = Path(self.ui.txt_excluirRuta.text())
+        self.searcher = Searcher(ruta, self.ui.txt_consulta.text(), excluir_ruta , excluido)
         self.searcher.updated.connect(self.add_row)
+        self.searcher.files.connect(self.countFiles)
+        self.searcher.finished.connect(self.endScan)
         self.searcher.start()
 
-    def dataRow(self, row, column):
-
+    def dataRow(self, row, column):        
         # Sumary
         self.ui.tedit_sumary.clear()
         r_files = []
@@ -76,15 +82,31 @@ class SuperGrep(QMainWindow):
         self.ui.tedit_hints.appendHtml("<b>Linea:</b> <br><br>" + linea)
 
         # preview
+        """
         self.ui.tedit_preview.clear()
         text = open(self.result_search[row][2], encoding='latin1').read()
-        self.ui.tedit_preview.insertPlainText(text)
+        self.ui.tedit_preview.insertPlainText(text) """
 
+    def endScan(self):
+        QMessageBox.information(self, "SuperGrep", "Busqueda finalizada", QMessageBox.Ok)
+
+
+    pyqtSlot(str)
+    def countFiles(self, files):
+        if files not in self.list_files:
+            self.list_files.append(files)
+            self.statusBar().showMessage('Archivos buscados: %i    Resultados Encontrados: %i' % (len(self.list_files), self.count))
+        
     pyqtSlot(list)
     def add_row(self, result):
+        self.count += 1
         self.result_search.append(result)        
         rowPosition = self.ui.tableSearch.rowCount()
         self.ui.tableSearch.insertRow(rowPosition)
+
+        header = self.ui.tableSearch.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         
         item1 = QTableWidgetItem(result[0])
         item2 = QTableWidgetItem(result[1])

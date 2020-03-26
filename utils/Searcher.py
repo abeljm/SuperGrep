@@ -5,21 +5,31 @@ import pathlib
 
 class Searcher(QThread):
     updated = pyqtSignal(list)
-    def __init__(self, directory, pattern, parent=None):
+    files = pyqtSignal(str)
+    finished = pyqtSignal()
+    def __init__(self, directory, pattern, ex_ruta, black_list, parent=None):
         super(Searcher, self).__init__(parent)
         self.directory = directory
         self.pattern = pattern
+        self.ex_ruta = ex_ruta
+        self.black_list = black_list
 
     def run(self):
-        self.search(self.directory, self.pattern)            
+        self.search(self.directory, self.pattern, self.ex_ruta, self.black_list)            
 
-    def search(self,directory,pattern):
+    def search(self, _directory, pattern, _ex_ruta, black_list):
         search = []
         _pattern = pattern
         pattern = re.compile(pattern, re.IGNORECASE)
-        for path, _, files in os.walk(directory):
+        directory = pathlib.Path(_directory)
+        ex_ruta = pathlib.Path(_ex_ruta)
+        
+        for path, _, files in os.walk(directory):            
+            if os.name == 'nt':
+                path = os.path.abspath(path)
             for fn in files:
-                if not fn.endswith('.dex'):
+                self.files.emit(fn)
+                if fn not in black_list: # if not fn.endswith('.dex'):                
                     filepath = os.path.join(path, fn)
                     with open(filepath,encoding='latin1') as handle:
                         for lineno, line in enumerate(handle):
@@ -32,5 +42,5 @@ class Searcher(QThread):
                                 word = mo.group()                                
                                 #search.append([filename, ext, filepath, word, lineno, linea, _pattern ])
                                 search = [filename, ext, filepath, word, lineno + 1, linea, _pattern ]
-                                self.updated.emit(search)                               
-        return search 
+                                self.updated.emit(search)
+        self.finished.emit()
