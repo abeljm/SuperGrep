@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtCore import pyqtSignal, QThread, QWaitCondition, QMutex
 import re
 import os
 import pathlib
@@ -14,6 +14,21 @@ class Searcher(QThread):
         self.ex_ruta = ex_ruta
         self.black_list = black_list
 
+        self._isPause = False
+        self._value = 0
+        self.cond = QWaitCondition()
+        self.mutex = QMutex()
+
+    def stop(self):
+        self.terminate()
+
+    def pause(self):
+        self._isPause = True
+
+    def resume(self):
+        self._isPause = False
+        self.cond.wakeAll()
+
     def run(self):
         self.search(self.directory, self.pattern, self.ex_ruta, self.black_list)            
 
@@ -24,7 +39,12 @@ class Searcher(QThread):
         directory = pathlib.Path(_directory)
         ex_ruta = pathlib.Path(_ex_ruta)
         
-        for path, _, files in os.walk(directory):            
+        for path, _, files in os.walk(directory):
+            self.mutex.lock()
+
+            if self._isPause:
+                self.cond.wait(self.mutex)
+
             if os.name == 'nt':
                 path = os.path.abspath(path)
             for fn in files:
@@ -43,4 +63,5 @@ class Searcher(QThread):
                                 #search.append([filename, ext, filepath, word, lineno, linea, _pattern ])
                                 search = [filename, ext, filepath, word, lineno + 1, linea, _pattern ]
                                 self.updated.emit(search)
+            self.mutex.unlock()
         self.finished.emit()

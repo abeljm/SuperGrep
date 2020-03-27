@@ -243,16 +243,6 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_preview">
-           <attribute name="title">
-            <string>Preview</string>
-           </attribute>
-           <layout class="QGridLayout" name="gridLayout_6">
-            <item row="0" column="0">
-             <widget class="QTextEdit" name="tedit_preview"/>
-            </item>
-           </layout>
-          </widget>
          </widget>
         </item>
        </layout>

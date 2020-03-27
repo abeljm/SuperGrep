@@ -27,15 +27,36 @@ class SuperGrep(QMainWindow):
         self.ui.btn_rutaExaminar.clicked.connect(partial(self.browse, self.ui.txt_ruta))
         self.ui.btn_excluirExaminar.clicked.connect(partial(self.browse, self.ui.txt_excluirRuta))
         self.ui.btn_buscar.clicked.connect(self.scan)
+        self.ui.btn_pausar.clicked.connect(self.toggle_status)
+        self.ui.btn_parar.clicked.connect(self.stop)
         self.ui.tableSearch.currentCellChanged.connect(self.dataRow)
         self.result_search = list()
         self.list_files = list()
         self.count = 0
+        self.flag_thread = False
 
     def browse(self,edit):
         fileName = QFileDialog.getExistingDirectory(self, 'Select directory')
         if fileName:
             edit.setText(fileName)
+
+    def toggle_status(self):
+        self.flag_thread = not self.flag_thread
+        if self.flag_thread:
+            self.pause()
+            self.ui.btn_pausar.setText('Start')
+        else:
+            self.resume()
+            self.ui.btn_pausar.setText('Pause')
+
+    def resume(self):
+        self.searcher.resume()
+
+    def pause(self):
+        self.searcher.pause()
+
+    def stop(self):
+        self.searcher.stop()
 
     def scan(self):
         ruta = self.ui.txt_ruta.text()
@@ -81,15 +102,8 @@ class SuperGrep(QMainWindow):
         linea = linea.replace(self.result_search[row][3], "<font color=\"red\">" + self.result_search[row][3] + "</font>")
         self.ui.tedit_hints.appendHtml("<b>Linea:</b> <br><br>" + linea)
 
-        # preview
-        """
-        self.ui.tedit_preview.clear()
-        text = open(self.result_search[row][2], encoding='latin1').read()
-        self.ui.tedit_preview.insertPlainText(text) """
-
     def endScan(self):
         QMessageBox.information(self, "SuperGrep", "Busqueda finalizada", QMessageBox.Ok)
-
 
     pyqtSlot(str)
     def countFiles(self, files):
