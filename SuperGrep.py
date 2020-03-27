@@ -109,7 +109,7 @@ class SuperGrep(QMainWindow):
     def countFiles(self, files):
         if files not in self.list_files:
             self.list_files.append(files)
-            self.statusBar().showMessage('Archivos buscados: %i    Resultados Encontrados: %i' % (len(self.list_files) + 1, self.count))
+            self.statusBar().showMessage('Archivos buscados: %i    Resultados Encontrados: %i' % (len(self.list_files), self.count))
         
     pyqtSlot(list)
     def add_row(self, result):
